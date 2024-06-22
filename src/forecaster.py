@@ -14,6 +14,8 @@ class Forecaster:
         self.prediction_size: int = prediction_size
         self.windows_size: int = history_size + prediction_size
         self.model: tf.keras.Model = None
+        self.model_history = None
+        self.scaler = None
         
         self.X_train_data = None
         self.y_train_data = None
@@ -54,15 +56,10 @@ class Forecaster:
             >>> # preparing data
             >>> forecaster.prepare_data()
         """
-        self._scale_data()
+        # self._scale_data()
         
-        test_size = 0.2
         X_windows, y_windows = Forecaster._generate_windows(self.data, self.history_size, self.prediction_size)
-        
-        X_train, X_test, y_train, y_test = train_test_split(X_windows, y_windows, test_size=test_size)
-        
-        self.X_train_data, self.y_train_data = X_train, y_train
-        self.X_test_data, self.y_test_data = X_test, y_test
+        self.X_train_data, self.y_train_data = X_windows, y_windows
         
         return
     
@@ -84,6 +81,7 @@ class Forecaster:
         
         # scaling
         scaler = MinMaxScaler(feature_range=(lower_bound, upper_bound))
+        self.scaler = scaler
         self.data = scaler.fit_transform(self.data.reshape(-1, 1))
         
         return
@@ -116,7 +114,7 @@ class Forecaster:
         return X_windows, y_windows
     
     
-    def build_model(self, history_size: int, prediction_size: int) -> None:
+    def build_model(self, history_size: int, prediction_size: int, model: Sequential = None) -> None:
         """Builds the model with a default architecture.
 
         Args:
@@ -126,7 +124,8 @@ class Forecaster:
         self.model = Sequential([
             SimpleRNN(50, activation='relu', input_shape=(history_size, 1)),
             Dense(prediction_size)
-        ])
+        ]) if model is None else model
+        
         self.model_loaded = True
         
         return
@@ -148,7 +147,7 @@ class Forecaster:
         return
     
     
-    def train(self, epochs: int, batch_size: int, initial_epoch: int = 0) -> None:
+    def train(self, epochs: int, batch_size: int, initial_epoch: int = 0, validation_split: float = 0.2) -> None:
         """Trains the model with the training data.
 
         Args:
@@ -162,7 +161,7 @@ class Forecaster:
         X = self.X_train_data
         y = self.y_train_data
         
-        self.model.fit(X, y, initial_epoch=initial_epoch, epochs=epochs, batch_size=batch_size)
+        self.model_history = self.model.fit(X, y, validation_split=validation_split, initial_epoch=initial_epoch, epochs=epochs, batch_size=batch_size)
         
         return
     
@@ -189,6 +188,7 @@ class Forecaster:
         """
         reshaped_data = historical_data.reshape(1, self.history_size, 1)
         y_predicted = self.model.predict(reshaped_data)
+        y_predicted = y_predicted.reshape(self.history_size)
         
         return y_predicted
     
