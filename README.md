@@ -1,9 +1,9 @@
 # Recurrent Neural Network - Time Series Forecasting
 This project is a simple general time series forecaster with LSTM Recurrent Neural Network, implemented with [Tensorflow](https://www.tensorflow.org/).
 
-<div style='display: flex; justify-content: center; align-items: center;'>
+<p align='center'>
   <img src='images/last_10_days_prediction.png' style='width: 400px'></img>
-</div>
+</p>
 
 For demonstration purposes, i used the model to predict the bitcoin close prices for the next 10 days, based on the prices of the last 30 days.
 
@@ -69,9 +69,9 @@ btc = yfinance.download('BTC-USD', start='2005-01-01', end='2024-06-19')
 btc_data = np.array(btc['Close'])
 ```
 
-<div style='display: flex; justify-content: center; align-items: center;'>
+<p align='center'>
   <img src='images/BTC_historical_prices.png' style='width: 400px'><img/>
-</div>
+</p>
 
 ```python
 # training the model
@@ -89,6 +89,6 @@ past_window = data[-30:]
 future_predicted_window = forecaster.predict(past_window)
 ```
 
-<div style='display: flex; justify-content: center; align-items: center;'>
+<p align='center'>
   <img src='images/predicted_01.png' style='width: 400px'><img/>
-</div>
+</p>
